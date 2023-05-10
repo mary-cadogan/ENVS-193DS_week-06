@@ -122,7 +122,6 @@ whales_2018_dots <- whales_clean %>%
   stat_summary(fun = median, fun.min = median, fun.max = median,
                  geom = "crossbar", width = 0.5) +
   scale_color_manual(values = wes_palette("Zissou1", 4)) +
-  scale_fill_manual(values = wes_palette("Zissou1", 4)) +
   theme_light() +
   theme(legend.position = "none") +
   labs(x = "Month", y = "Daily whale sightings", 
