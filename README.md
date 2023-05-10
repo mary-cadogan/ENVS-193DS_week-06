@@ -40,7 +40,10 @@ Not an exhaustive list!
 
 ## Rendered output
 
-In this workshop, we'll talk about how to use GitHub pages. The rendered output is [here](https://an-bui.github.io/ENVS-193DS_week-06/key/workshop-06_2023-05-09_key.html).
+In this workshop, we'll talk about how to use GitHub pages. The rendered output is [here](https://an-bui.github.io/ENVS-193DS_week-06/key/workshop-06_2023-05-09_key.html).  
+
+When using GitHub pages, the URL for any rendered/knitted output is "your github username.github.io"/ "repository name"/"file path". So, for example, the url for the rendered output (linked above) is:
+`an-bui.github.io/ENVS-193DS_week-06/key/workshop-06_2023-05-09_key.html`.
 
 ## Data sources
 
