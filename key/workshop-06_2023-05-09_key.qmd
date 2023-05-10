@@ -31,7 +31,7 @@ New functions:
 - `skim`  
 - `str_detect`
 
-```{r data}
+```{r data, message = FALSE}
 whales <- read_csv(here("data", "Graywhale_watching_2007_2019.csv"))
 ```
 
