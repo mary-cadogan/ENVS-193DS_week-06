@@ -174,11 +174,11 @@ whales_2019_boxplot_v2 <- whales_2019 %>%
        title = "Gray whales counted off of Coal Oil Point") +
   annotation_raster(whale_image, xmin = 3, xmax = 4.5, ymin = 40, ymax = 60)
 
-# going to get a scary message from this - that's ok!
+# going to get a scary warning from this - that's ok!
 whales_2019_boxplot_v2
 ```
 
-```{r better-interactive, message = FALSE}
+```{r better-interactive, warning = FALSE}
 whales_2019_interactive_v2 <- ggplotly(whales_2019_boxplot_v2, tooltip = "text")
 
 whales_2019_interactive_v2
