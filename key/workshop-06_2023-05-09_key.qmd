@@ -159,7 +159,7 @@ whales_2019_interactive
 
 # 4. making the boxplot interactive, but better
 
-```{r better-interactive}
+```{r better-static}
 # go back up to whales_clean and create a new column for the marker
 
 whales_2019_boxplot_v2 <- whales_2019 %>% 
@@ -174,12 +174,16 @@ whales_2019_boxplot_v2 <- whales_2019 %>%
        title = "Gray whales counted off of Coal Oil Point") +
   annotation_raster(whale_image, xmin = 3, xmax = 4.5, ymin = 40, ymax = 60)
 
+# going to get a scary message from this - that's ok!
 whales_2019_boxplot_v2
+```
 
+```{r better-interactive, message = FALSE}
 whales_2019_interactive_v2 <- ggplotly(whales_2019_boxplot_v2, tooltip = "text")
 
 whales_2019_interactive_v2
 ```
+
 
 Last plot (if we have time): how would you show the variation in whale count (if there is any) across viewing conditions?
 
