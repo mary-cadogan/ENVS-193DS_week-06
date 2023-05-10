@@ -7,7 +7,7 @@ toc: true
 
 # 0. load in packages and data
 
-## packages:
+## packages
 
 ```{r libraries, message = FALSE}
 library(tidyverse) # general usage
@@ -17,17 +17,19 @@ library(skimr) # quick glimpses at data
 library(naniar) # visualizing missing data
 library(magick) # inserting images into plots
 library(NatParksPalettes) # one example of color palette package
+library(wesanderson) # another example of a color palette package
 library(patchwork) # putting plots together
 ```
 
-## data:
+## data
 
 New functions:  
 - `year`  
 - `month`  
 - `fct_relevel`  
 - `paste`/`paste0`  
-- `skim`
+- `skim`  
+- `str_detect`
 
 ```{r data}
 whales <- read_csv(here("data", "Graywhale_watching_2007_2019.csv"))
@@ -52,13 +54,24 @@ whales_clean <- whales %>%
   # extract year and month
   mutate(year = lubridate::year(date),
          month = lubridate::month(date)) %>% 
+  # make month numbers into names
   mutate(month_name = case_when(
     month == 2 ~ "February",
     month == 3 ~ "March",
     month == 4 ~ "April",
-    month == 5 ~ "May"
-  ), month_name = forcats::as_factor(month_name),
-  month_name = forcats::fct_relevel(month_name, "February", "March", "April", "May")) %>% 
+    month == 5 ~ "May"), 
+    # make the factor levels
+    month_name = forcats::as_factor(month_name),
+    # reorder the months to be in the right order
+    month_name = forcats::fct_relevel(month_name, "February", "March", "April", "May")) %>% 
+  mutate(condition_new = case_when(
+    str_detect(condition, "Excellent") ~ "Excellent",
+    str_detect(condition, "Good") ~ "Good",
+    str_detect(condition, "Fair") ~ "Fair",
+    str_detect(condition, "Poor") ~ "Poor"),
+  # relevel the conditions in a way that makes sense (could be the other way)
+    condition_new = fct_relevel(condition_new, "Excellent", "Good", "Fair", "Poor")) %>% 
+  # create a new column called marker text for interactivity
   mutate(marker_text = paste0("Date: ", date, "<br>",
                               "Total whales spotted: ", total))
 ```
@@ -68,22 +81,29 @@ whales_clean <- whales %>%
 ## a. 2019 whales
 
 ```{r whales-2019}
+# filter clean df to only include 2019
 whales_2019 <- whales_clean %>% 
   filter(year == 2019)
 
-whale_image <- image_read(here("images", "noaa-gray-whale.png")) %>% 
+# read in gray whale png as raster
+whale_image <- magick::image_read(here("images", "noaa-gray-whale.png")) %>% 
   as.raster()
 
+# make a boxplot
 whales_2019_boxplot <- ggplot(data = whales_2019, aes(x = month_name, y = total)) +
   geom_boxplot(aes(fill = month_name), alpha = 0.8) +
-  geom_jitter(aes(color = month_name), width = 0.2) +
+  # new way to make a jitter: geom_point + position_jitter
+  # somewhat better because you have more control over what you're doing!
+  geom_point(aes(color = month_name), position = position_jitter(width = 0.3, height = 0, seed = 1)) +
+  # use palettes from national parks palette package
   scale_color_manual(values = natparks.pals("Olympic", 4)) +
   scale_fill_manual(values = natparks.pals("Olympic", 4)) +
   theme_light() +
   theme(legend.position = "none") +
-  labs(x = "Month", y = "Total whales", 
+  labs(x = "Month", y = "Daily whale sightings", 
        title = "Gray whales counted off of Coal Oil Point in 2019") +
-  annotation_raster(whale_image, xmin = 2.5, xmax = 4.5, ymin = 30, ymax = 60)
+  # add the gray whale image to the plot
+  annotation_raster(whale_image, xmin = 2.5, xmax = 4.5, ymin = 30, ymax = 60) 
 
 whales_2019_boxplot
 ```
@@ -91,29 +111,31 @@ whales_2019_boxplot
 ## b. 2018 whales
 
 ```{r whales-2018}
+# read in another gray whale image, this time from a URL
 whale_image2 <- image_read("https://www.acsonline.org/assets/images/eschrichtius-robustus.png") %>% 
   as.raster()
 
-whales_2018_boxplot <- whales_clean %>% 
+whales_2018_dots <- whales_clean %>% 
   filter(year == 2018) %>% 
   ggplot(aes(x = month_name, y = total)) +
-  geom_boxplot(aes(fill = month_name), alpha = 0.8) +
-  geom_jitter(aes(color = month_name), width = 0.2) +
-  scale_color_manual(values = natparks.pals("Acadia", 4)) +
-  scale_fill_manual(values = natparks.pals("Acadia", 4)) +
+  geom_point(aes(color = month_name), position = position_jitter(width = 0.3, height = 0, seed = 1)) +
+  stat_summary(fun = median, fun.min = median, fun.max = median,
+                 geom = "crossbar", width = 0.5) +
+  scale_color_manual(values = wes_palette("Zissou1", 4)) +
+  scale_fill_manual(values = wes_palette("Zissou1", 4)) +
   theme_light() +
   theme(legend.position = "none") +
-  labs(x = "Month", y = "Total whales", 
+  labs(x = "Month", y = "Daily whale sightings", 
        title = "Gray whales counted off of Coal Oil Point in 2018") +
-  annotation_raster(whale_image2, xmin = 0.5, xmax = 2, ymin = 6.3, ymax = 7.3)
+  annotation_raster(whale_image2, xmin = 0.5, xmax = 2, ymin = 6, ymax = 7) 
   
-whales_2018_boxplot
+whales_2018_dots
 ```
 
 ## c. whales stacked plots  
 
 ```{r putting-plots-together, fig.width = 8, fig.height = 10}
-whales_together <- whales_2018_boxplot / whales_2019_boxplot
+whales_together <- whales_2018_dots / whales_2019_boxplot
 
 whales_together
 ```
@@ -145,10 +167,10 @@ whales_2019_boxplot_v2 <- whales_2019 %>%
   scale_color_manual(values = natparks.pals("Olympic", 4)) +
   scale_fill_manual(values = natparks.pals("Olympic", 4)) +
   geom_boxplot(aes(fill = month_name), alpha = 0.8) +
-  geom_jitter(aes(color = month_name)) +
+  geom_point(aes(color = month_name), position = position_jitter(width = 0.3, height = 0, seed = 1)) +
   theme_light() +
   theme(legend.position = "none") +
-  labs(x = "Month", y = "Total whales", 
+  labs(x = "Month", y = "Daily whale sightings", 
        title = "Gray whales counted off of Coal Oil Point") +
   annotation_raster(whale_image, xmin = 3, xmax = 4.5, ymin = 40, ymax = 60)
 
@@ -159,11 +181,6 @@ whales_2019_interactive_v2 <- ggplotly(whales_2019_boxplot_v2, tooltip = "text")
 whales_2019_interactive_v2
 ```
 
-# 5. ruffed grouse (if we have time)
-
-```{r grouse-data}
-grouse <- read_csv(here("data", "grouse.csv"),
-                   col_types = c(comment = "character"))
-```
+Last plot (if we have time): how would you show the variation in whale count (if there is any) across viewing conditions?
 
 
