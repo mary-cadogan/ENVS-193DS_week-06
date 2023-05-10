@@ -2,9 +2,168 @@
 title: "Week 6 coding workshop key"
 author: "insert your name here"
 format: html
+toc: true
 ---
 
+# 0. load in packages and data
+
+## packages:
+
+```{r libraries, message = FALSE}
+library(tidyverse) # general usage
+library(here) # organization
+library(plotly) # interactive plots
+library(skimr) # quick glimpses at data
+library(naniar) # visualizing missing data
+library(magick) # inserting images into plots
+library(NatParksPalettes) # one example of color palette package
+library(patchwork) # putting plots together
+```
+
+## data:
+
+New functions:  
+- `year`  
+- `month`  
+- `fct_relevel`  
+- `paste`/`paste0`  
+- `skim`
+
+```{r data}
+whales <- read_csv(here("data", "Graywhale_watching_2007_2019.csv"))
+```
+
+looking at missing data:
+
+```{r skimming-whales}
+skim(whales)
+```
+
+visualizing missing data:
+
+```{r missing-data-vis}
+gg_miss_var(whales)
+```
+
+wrangling:
+
+```{r wrangling-whales}
+whales_clean <- whales %>% 
+  # extract year and month
+  mutate(year = lubridate::year(date),
+         month = lubridate::month(date)) %>% 
+  mutate(month_name = case_when(
+    month == 2 ~ "February",
+    month == 3 ~ "March",
+    month == 4 ~ "April",
+    month == 5 ~ "May"
+  ), month_name = forcats::as_factor(month_name),
+  month_name = forcats::fct_relevel(month_name, "February", "March", "April", "May")) %>% 
+  mutate(marker_text = paste0("Date: ", date, "<br>",
+                              "Total whales spotted: ", total))
+```
+
+# 1. visualizing whales
+
+## a. 2019 whales
+
+```{r whales-2019}
+whales_2019 <- whales_clean %>% 
+  filter(year == 2019)
+
+whale_image <- image_read(here("images", "noaa-gray-whale.png")) %>% 
+  as.raster()
+
+whales_2019_boxplot <- ggplot(data = whales_2019, aes(x = month_name, y = total)) +
+  geom_boxplot(aes(fill = month_name), alpha = 0.8) +
+  geom_jitter(aes(color = month_name), width = 0.2) +
+  scale_color_manual(values = natparks.pals("Olympic", 4)) +
+  scale_fill_manual(values = natparks.pals("Olympic", 4)) +
+  theme_light() +
+  theme(legend.position = "none") +
+  labs(x = "Month", y = "Total whales", 
+       title = "Gray whales counted off of Coal Oil Point in 2019") +
+  annotation_raster(whale_image, xmin = 2.5, xmax = 4.5, ymin = 30, ymax = 60)
+
+whales_2019_boxplot
+```
+
+## b. 2018 whales
+
+```{r whales-2018}
+whale_image2 <- image_read("https://www.acsonline.org/assets/images/eschrichtius-robustus.png") %>% 
+  as.raster()
+
+whales_2018_boxplot <- whales_clean %>% 
+  filter(year == 2018) %>% 
+  ggplot(aes(x = month_name, y = total)) +
+  geom_boxplot(aes(fill = month_name), alpha = 0.8) +
+  geom_jitter(aes(color = month_name), width = 0.2) +
+  scale_color_manual(values = natparks.pals("Acadia", 4)) +
+  scale_fill_manual(values = natparks.pals("Acadia", 4)) +
+  theme_light() +
+  theme(legend.position = "none") +
+  labs(x = "Month", y = "Total whales", 
+       title = "Gray whales counted off of Coal Oil Point in 2018") +
+  annotation_raster(whale_image2, xmin = 0.5, xmax = 2, ymin = 6.3, ymax = 7.3)
+  
+whales_2018_boxplot
+```
+
+## c. whales stacked plots
+
+```{r putting-plots-together, fig.width = 8, fig.height = 10}
+whales_together <- whales_2018_boxplot / whales_2019_boxplot
+
+whales_together
+```
 
 
+# 2. saving the plot
+
+```{r saving-whales-boxplot, eval = FALSE}
+ggsave(here("figures", paste0("whales_boxplots_", today(), ".png")), 
+       whales_together, 
+       width = 8, height = 10, units = "in")
+```
+
+# 3. making the boxplot interactive
+
+```{r basic-ggplotly}
+whales_2019_interactive <- ggplotly(whales_2019_boxplot)
+
+whales_2019_interactive 
+```
+
+# 4. making the boxplot interactive, but better
+
+```{r better-interactive}
+# go back up to whales_clean and create a new column for the marker
+
+whales_2019_boxplot_v2 <- whales_2019 %>% 
+  ggplot(aes(x = month_name, y = total, group = month_name, text = marker_text)) +
+  scale_color_manual(values = natparks.pals("Olympic", 4)) +
+  scale_fill_manual(values = natparks.pals("Olympic", 4)) +
+  geom_boxplot(aes(fill = month_name), alpha = 0.8) +
+  geom_jitter(aes(color = month_name)) +
+  theme_light() +
+  theme(legend.position = "none") +
+  labs(x = "Month", y = "Total whales", 
+       title = "Gray whales counted off of Coal Oil Point") +
+  annotation_raster(whale_image, xmin = 3, xmax = 4.5, ymin = 40, ymax = 60)
+
+whales_2019_boxplot_v2
+
+whales_2019_interactive_v2 <- ggplotly(whales_2019_boxplot_v2, tooltip = "text")
+
+whales_2019_interactive_v2
+```
+
+# 5. ruffed grouse (if we have time)
+
+```{r grouse-data}
+grouse <- read_csv(here("data", "grouse.csv"),
+                   col_types = c(comment = "character"))
+```
 
 
