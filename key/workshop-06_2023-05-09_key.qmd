@@ -110,7 +110,7 @@ whales_2018_boxplot <- whales_clean %>%
 whales_2018_boxplot
 ```
 
-## c. whales stacked plots
+## c. whales stacked plots  
 
 ```{r putting-plots-together, fig.width = 8, fig.height = 10}
 whales_together <- whales_2018_boxplot / whales_2019_boxplot
