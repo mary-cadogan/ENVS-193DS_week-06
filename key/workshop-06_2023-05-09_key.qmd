@@ -73,7 +73,8 @@ whales_clean <- whales %>%
     condition_new = fct_relevel(condition_new, "Excellent", "Good", "Fair", "Poor")) %>% 
   # create a new column called marker text for interactivity
   mutate(marker_text = paste0("Date: ", date, "<br>",
-                              "Total whales spotted: ", total))
+                              "Total whales spotted: ", total, "<br>",
+                              "Local time: ", local_time))
 ```
 
 # 1. visualizing whales
